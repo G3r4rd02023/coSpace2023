@@ -1,8 +1,11 @@
+using CoSpace.Data;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-
+builder.Services.AddDbContext<DataContext>(x => x.UseSqlServer("name=LocalConnection"));
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
