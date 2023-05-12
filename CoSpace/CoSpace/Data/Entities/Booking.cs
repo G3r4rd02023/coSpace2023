@@ -31,6 +31,6 @@ namespace CoSpace.Data.Entities
 
         public BookingState BookingState { get; set; }
 
-        public ICollection<Pay> Pays { get; set; } = null!;
+        //public ICollection<Pay> Pays { get; set; } = null!;
     }
 }

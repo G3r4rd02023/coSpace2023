@@ -33,6 +33,6 @@ namespace CoSpace.Data.Entities
         [MaxLength(200, ErrorMessage = "El campo {0} debe tener máximo {1} caractéres.")]
         [Required(ErrorMessage = "El campo {0} es obligatorio.")]
         public string Description { get; set; } = null!;
-        public ICollection<Booking> Bookings { get; set; } = null!;
+        //public ICollection<Booking> Bookings { get; set; } = null!;
     }
 }
