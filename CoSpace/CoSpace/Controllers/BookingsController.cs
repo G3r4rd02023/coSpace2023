@@ -1,19 +1,22 @@
 ﻿using CoSpace.Data;
 using CoSpace.Data.Entities;
+using CoSpace.Helpers;
+using CoSpace.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Data;
 
 namespace CoSpace.Controllers
 {
     public class BookingsController : Controller
     {
         private readonly DataContext _context;
+        private readonly IUserHelper _userHelper;
 
-        public BookingsController(DataContext context)
+        public BookingsController(DataContext context, IUserHelper userHelper)
         {
             _context = context;
+            _userHelper = userHelper;
         }
 
         // GET: Bookings
@@ -42,13 +45,13 @@ namespace CoSpace.Controllers
             return View(booking);
         }
 
-        
+
         public IActionResult Create()
         {
             return View();
         }
 
-        
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Booking booking)
@@ -120,7 +123,7 @@ namespace CoSpace.Controllers
 
             return RedirectToAction(nameof(Details), new { booking.Id });
         }
-        // GET: Bookings/Edit/5
+
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null || _context.Bookings == null)
@@ -136,12 +139,10 @@ namespace CoSpace.Controllers
             return View(booking);
         }
 
-        // POST: Bookings/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,StartDate,EndDate,TotalPrice,BookingState")] Booking booking)
+        public async Task<IActionResult> Edit(int id, Booking booking)
         {
             if (id != booking.Id)
             {
@@ -171,7 +172,68 @@ namespace CoSpace.Controllers
             return View(booking);
         }
 
-        // GET: Bookings/Delete/5
+        public async Task<IActionResult> Pay(int id)
+        {
+            User user = await _userHelper.GetUserAsync(User.Identity.Name);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            Booking booking = await _context.Bookings.FindAsync(id);
+
+            PayViewModel model = new()
+            {
+                Booking = booking,
+                BookingId = id,
+                User = user,
+                PaymentMethod = Enums.PaymentMethod.Efectivo,
+                Date = DateTime.Now,
+                Amount = booking.TotalPrice
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Pay(PayViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                User user = await _userHelper.GetUserAsync(User.Identity.Name);
+                if (user == null)
+                {
+                    return NotFound();
+                }
+                //si no se agrega hidden for SpaceId en la vista AddBooking, el SpaceId se pierde y llega nulo a este punto.
+                Booking booking = await _context.Bookings.FindAsync(model.BookingId);
+                if (booking == null)
+                {
+                    return NotFound();
+                }
+                try
+                {
+                    Pay pay = new()
+                    {
+                        Booking = booking,
+                        User = user,
+                        Date = model.Date,                        
+                        PaymentMethod = model.PaymentMethod,
+                        Amount = model.Amount
+
+                    };
+                    _context.Add(pay);
+                    await _context.SaveChangesAsync();
+                }
+                catch (Exception exception)
+                {
+                    ModelState.AddModelError(string.Empty, exception.Message);
+                }
+                return RedirectToAction(nameof(Index));
+            }
+            return View(model);
+        }
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null || _context.Bookings == null)
@@ -189,7 +251,7 @@ namespace CoSpace.Controllers
             return View(booking);
         }
 
-        // POST: Bookings/Delete/5
+
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
