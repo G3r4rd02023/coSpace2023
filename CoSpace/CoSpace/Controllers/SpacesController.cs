@@ -93,7 +93,7 @@ namespace CoSpace.Controllers
                 {
                     if (dbUpdateException.InnerException.Message.Contains("duplicate"))
                     {
-                        _flashMessage.Danger(string.Empty, "Ya existe un país con el mismo nombre.");
+                        _flashMessage.Danger(string.Empty, "Ya existe un espacio de trabajo con el mismo nombre.");
                     }
                     else
                     {
