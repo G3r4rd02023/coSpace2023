@@ -1,7 +1,6 @@
 ﻿using CoSpace.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Xml.Linq;
 
 namespace CoSpace.Data.Entities
 {
@@ -11,7 +10,7 @@ namespace CoSpace.Data.Entities
 
         public User? User { get; set; }
 
-        public Space? Space { get; set; } 
+        public Space? Space { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:yyyy/MM/dd hh:mm tt}")]
         [Display(Name = "Fecha Inicio")]

@@ -21,13 +21,35 @@ namespace CoSpace.Controllers
             _userHelper = userHelper;
         }
 
-        // GET: Spaces
+        
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Spaces.ToListAsync());
+            List<Space> availableSpaces = GetAvailableSpaces();
+
+            return View(availableSpaces);
         }
 
-        // GET: Spaces/Details/5
+        private List<Space> GetAvailableSpaces()
+        {
+            DateTime currentDate = DateTime.Now;
+
+            List<Space> availableSpaces;
+
+            // Obtener las reservas que están activas en el momento actual
+            List<int> activeBookingIds = _context.Bookings
+                .Where(b => b.StartDate <= currentDate && b.EndDate > currentDate)
+                .Select(b => b.Space.Id)
+                .ToList();
+
+            // Obtener los espacios que no están asociados a reservas activas
+            availableSpaces = _context.Spaces
+                .Where(s => !activeBookingIds.Contains(s.Id))
+                .ToList();
+
+            return availableSpaces;
+        }
+
+
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null || _context.Spaces == null)
@@ -91,6 +113,14 @@ namespace CoSpace.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddBooking(BookingViewModel model)
         {
+            bool isSpaceAvailable = IsSpaceAvailable(model.SpaceId, model.StartDate, model.EndDate);
+
+            if (!isSpaceAvailable)
+            {
+                ModelState.AddModelError("", "El espacio seleccionado no está disponible en el horario especificado.");                
+                return View(model);
+            }
+
             if (ModelState.IsValid)
             {
                 User user = await _userHelper.GetUserAsync(User.Identity.Name);
@@ -116,6 +146,7 @@ namespace CoSpace.Controllers
                         TotalPrice = space.Price
                         
                     };
+                    
                     _context.Add(booking);
                     await _context.SaveChangesAsync();
                 }
@@ -128,7 +159,16 @@ namespace CoSpace.Controllers
             return View(model);
         }
 
-        
+        private bool IsSpaceAvailable(int spaceId, DateTime startDate, DateTime endDate)
+        {
+            // Verificar si hay alguna reserva existente en el mismo espacio y horario
+            bool isAvailable = !_context.Bookings.Any(b =>
+                b.Space.Id == spaceId &&
+                ((b.StartDate >= startDate && b.StartDate < endDate) || (b.EndDate > startDate && b.EndDate <= endDate)));
+
+            return isAvailable;
+        }
+
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null || _context.Spaces == null)

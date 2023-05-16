@@ -19,15 +19,27 @@ namespace CoSpace.Controllers
             _userHelper = userHelper;
         }
 
-        // GET: Bookings
+        
         public async Task<IActionResult> Index()
         {
-            return _context.Bookings != null ?
-                        View(await _context.Bookings.ToListAsync()) :
-                        Problem("Entity set 'DataContext.Bookings'  is null.");
+            List<Booking> availableBookings = GetAvailableBookings();
+
+            return View(availableBookings);
         }
 
-        // GET: Bookings/Details/5
+        private List<Booking> GetAvailableBookings()
+        {
+            DateTime currentDate = DateTime.Now;
+
+            List<Booking> availableBookings;
+
+            availableBookings = _context.Bookings
+                .Where(b => b.EndDate > currentDate)
+                .ToList();
+
+            return availableBookings;
+        }
+
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null || _context.Bookings == null)
