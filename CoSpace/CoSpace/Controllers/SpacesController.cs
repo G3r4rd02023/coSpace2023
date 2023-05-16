@@ -6,6 +6,7 @@ using CoSpace.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Vereyon.Web;
 
 namespace CoSpace.Controllers
 {
@@ -14,14 +15,16 @@ namespace CoSpace.Controllers
     {
         private readonly DataContext _context;
         private readonly IUserHelper _userHelper;
+        private readonly IFlashMessage _flashMessage;
 
-        public SpacesController(DataContext context, IUserHelper userHelper)
+        public SpacesController(DataContext context, IUserHelper userHelper, IFlashMessage flashMessage)
         {
             _context = context;
             _userHelper = userHelper;
+            _flashMessage = flashMessage;
         }
 
-        
+
         public async Task<IActionResult> Index()
         {
             List<Space> availableSpaces = GetAvailableSpaces();
@@ -80,9 +83,27 @@ namespace CoSpace.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Add(space);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    _context.Add(space);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (DbUpdateException dbUpdateException)
+                {
+                    if (dbUpdateException.InnerException.Message.Contains("duplicate"))
+                    {
+                        _flashMessage.Danger(string.Empty, "Ya existe un país con el mismo nombre.");
+                    }
+                    else
+                    {
+                        _flashMessage.Danger(string.Empty, dbUpdateException.InnerException.Message);
+                    }
+                }
+                catch (Exception exception)
+                {
+                    _flashMessage.Danger(string.Empty, exception.Message);
+                }
             }
             return View(space);
         }        

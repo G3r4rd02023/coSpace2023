@@ -3,6 +3,7 @@ using CoSpace.Data.Entities;
 using CoSpace.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Vereyon.Web;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +22,7 @@ builder.Services.AddIdentity<User, IdentityRole>(cfg =>
 
 builder.Services.AddTransient<SeedDb>();
 builder.Services.AddScoped<IUserHelper, UserHelper>();
+builder.Services.AddFlashMessage();
 
 var app = builder.Build();
 SeedData(app);
