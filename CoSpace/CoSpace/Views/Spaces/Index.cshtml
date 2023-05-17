@@ -8,8 +8,9 @@
 
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css" />
 
-<p>
-    <a asp-action="Create" class="btn btn-outline-primary">Crear Nuevo</a>
+<p>    
+    <a onclick="showInPopup('@Url.Action("Create", "Spaces", new { id = 0 }, Context.Request.Scheme)' ,
+    'Nuevo Espacio')" class="btn btn-sm btn-primary text-white"><i class="fa fa-plus-circle"></i> Espacio</a>
 </p>
 <div class="row">
     <div class="col-md-12">
@@ -62,10 +63,17 @@
                                 </td>
 
                                 <td>
-                                    <a asp-action="AddBooking" asp-route-id="@item.Id" class ="btn btn-outline-secondary">Reservar</a>
-                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-warning">Editar</a>
-                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-info">Detalles</a>
-                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger">Borrar</a>
+                                    
+                                    <a onclick="showInPopup('@Url.Action("AddBooking", "Spaces", new { id = item.Id }, Context.Request.Scheme)' ,
+                    'Reservar')" class="btn btn-outline-secondary"><i class="fa fa-pencil-alt"></i> </a>
+                                    <a onclick="showInPopup('@Url.Action("Edit", "Spaces", new { id = item.Id }, Context.Request.Scheme)' ,
+                    'Editar')" class="btn btn-outline-warning"><i class="fa fa-pencil-alt"></i> </a>
+                                    <a onclick="showInPopup('@Url.Action("Details", "Spaces", new { id = item.Id }, Context.Request.Scheme)' ,
+                    'Detalles')" class="btn btn-outline-info"><i class="fa fa-pencil-alt"></i> </a>
+                                    <button data-id="@item.Id" class="btn btn-outline-danger deleteItem" data-bs-toggle="modal"
+                                            data-bs-target="#deleteDialog">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
                                 </td>
                             </tr>
                         }
@@ -76,11 +84,15 @@
     </div>
 </div>
 
+<partial name="_AddOrEditDialog" />
+<partial name="_DeleteDialog" />
+
 @section Scripts{
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
     <script src="//cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="~/js/showmodal.js"></script>
 
     <script type="text/javascript">
         $(document).ready(function () {
@@ -94,6 +106,9 @@
                 ]
             });
         });
+    </script>
+    <script>
+        sc_deleteDialog.openModal('deleteItem', true, 'btnYesDelete', '/Spaces/Delete/', false);
     </script>
 
 }

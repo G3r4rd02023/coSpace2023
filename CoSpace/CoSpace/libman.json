@@ -1,0 +1,22 @@
+{
+  "version": "1.0",
+  "defaultProvider": "cdnjs",
+  "libraries": [
+    {
+      "library": "font-awesome@6.4.0",
+      "destination": "wwwroot/lib/font-awesome/"
+    },
+    {
+      "library": "datatables.net@2.1.1",
+      "destination": "wwwroot/lib/datatables.net/"
+    },
+    {
+      "library": "jqueryui@1.8.13",
+      "destination": "wwwroot/lib/jqueryui/"
+    },
+    {
+      "library": "jasny-bootstrap@4.0.0",
+      "destination": "wwwroot/lib/jasny-bootstrap/"
+    }
+  ]
+}
