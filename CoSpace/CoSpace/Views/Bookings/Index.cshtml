@@ -4,53 +4,109 @@
     ViewData["Title"] = "Index";
 }
 
-<h1>Index</h1>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.StartDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.EndDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.TotalPrice)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.BookingState)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.StartDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.EndDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.TotalPrice)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.BookingState)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-                <a asp-action="Confirm" asp-route-id="@item.Id" class="btn btn-outline-warning">Confirmar</a>
-                <a asp-action="Cancel" asp-route-id="@item.Id" class="btn btn-outline-danger">Cancelar</a>
-                <a asp-action="Pay" asp-route-id="@item.Id" class="btn btn-outline-success">Pagar</a>
-            </td>
-        </tr>
+<flash dismissable="true" />
+
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css" />
+
+<h4 style="font-family: 'Montserrat', sans-serif;">Reservas</h4>
+<hr />
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default" style="font-family: 'Montserrat', sans-serif;">
+            <div class="panel-heading">
+                <h5 class="panel-title">Reservas</h5>
+            </div>
+            <div class="panel-body">
+                <table class="table table-hover table-responsive table-striped" id="BookingsTable">
+                    <thead>
+                        <tr>
+                            <th>
+                                @Html.DisplayNameFor(model => model.StartDate)
+                            </th>
+                            <th>
+                                @Html.DisplayNameFor(model => model.EndDate)
+                            </th>
+                            <th>
+                                @Html.DisplayNameFor(model => model.TotalPrice)
+                            </th>
+                            <th>
+                                @Html.DisplayNameFor(model => model.BookingState)
+                            </th>
+                            <th>
+                                @Html.DisplayNameFor(model => model.User)
+                            </th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.StartDate)
+                                </td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.EndDate)
+                                </td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.TotalPrice)
+                                </td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.BookingState)
+                                </td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.User!.FullName)
+                                </td>
+                                <td>
+                                    <a onclick="showInPopup('@Url.Action("Edit", "Bookings", new { id = item.Id }, Context.Request.Scheme)' ,
+                    'Editar')" class="btn btn-outline-warning"><i class="fa fa-pencil-alt"></i> </a>
+                                    <a onclick="showInPopup('@Url.Action("Details", "Bookings", new { id = item.Id }, Context.Request.Scheme)' ,
+                    'Detalles')" class="btn btn-outline-info"><i class="fa-solid fa-list"></i></a>
+                                    <button data-id="@item.Id" class="btn btn-outline-danger deleteItem" data-bs-toggle="modal"
+                                            data-bs-target="#deleteDialog">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                    <a asp-action="Confirm" asp-route-id="@item.Id" class="btn btn-outline-primary"><i class="fa-solid fa-check"></i></a>
+                                    <a asp-action="Cancel" asp-route-id="@item.Id" class="btn btn-outline-secondary"><i class="fa-solid fa-ban"></i></a>                                   
+                                    <a onclick="showInPopup('@Url.Action("Pay", "Bookings", new { id = item.Id }, Context.Request.Scheme)' ,
+                    'Pagar')" class="btn btn-outline-success"><i class="fa-solid fa-dollar-sign"></i> </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<partial name="_AddOrEditDialog" />
+<partial name="_DeleteDialog" />
+
+@section Scripts{
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script src="//cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="~/js/showmodal.js"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#BookingsTable').DataTable({
+                "language": {
+                    url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json',
+                },
+                "aLengthMenu": [
+                    [25, 50, 100, 200, -1],
+                    [25, 50, 100, 200, "Todos"]
+                ]
+            });
+        });
+    </script>
+    <script>
+        sc_deleteDialog.openModal('deleteItem', true, 'btnYesDelete', '/Bookings/Delete/', false);
+    </script>
+
 }
-    </tbody>
-</table>

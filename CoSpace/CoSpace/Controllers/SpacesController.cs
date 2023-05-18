@@ -25,7 +25,7 @@ namespace CoSpace.Controllers
         }
 
 
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
             List<Space> availableSpaces = GetAvailableSpaces();
 
@@ -40,8 +40,9 @@ namespace CoSpace.Controllers
 
             // Obtener las reservas que están activas en el momento actual
             List<int> activeBookingIds = _context.Bookings
+                .Include(b => b.User)
                 .Where(b => b.StartDate <= currentDate && b.EndDate > currentDate)
-                .Select(b => b.Space.Id)
+                .Select(b => b.Space!.Id)
                 .ToList();
 
             // Obtener los espacios que no están asociados a reservas activas
@@ -87,11 +88,12 @@ namespace CoSpace.Controllers
                 {
                     _context.Add(space);
                     await _context.SaveChangesAsync();
+                    _flashMessage.Confirmation(string.Empty, "Espacio de trabajo creado exitosamente!.");
                     return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateException dbUpdateException)
                 {
-                    if (dbUpdateException.InnerException.Message.Contains("duplicate"))
+                    if (dbUpdateException.InnerException!.Message.Contains("duplicate"))
                     {
                         _flashMessage.Danger(string.Empty, "Ya existe un espacio de trabajo con el mismo nombre.");
                     }
@@ -110,13 +112,13 @@ namespace CoSpace.Controllers
 
         public async Task<IActionResult> AddBooking(int id)
         {
-            User user = await _userHelper.GetUserAsync(User.Identity.Name);
+            User user = await _userHelper.GetUserAsync(User.Identity!.Name!);
             if (user == null)
             {
                 return NotFound();
             }
 
-            Space space = await _context.Spaces.FindAsync(id);
+            Space? space = await _context.Spaces.FindAsync(id);
 
             BookingViewModel model = new()
             {
@@ -124,7 +126,7 @@ namespace CoSpace.Controllers
                 User = user,
                 BookingState = Enums.BookingState.Pendiente,
                 Space = space,
-                TotalPrice = space.Price
+                TotalPrice = space!.Price
             };
 
             return View(model);
@@ -138,19 +140,19 @@ namespace CoSpace.Controllers
 
             if (!isSpaceAvailable)
             {
-                ModelState.AddModelError("", "El espacio seleccionado no está disponible en el horario especificado.");                
+                _flashMessage.Danger("El espacio seleccionado no está disponible en el horario especificado.");                
                 return View(model);
             }
 
             if (ModelState.IsValid)
             {
-                User user = await _userHelper.GetUserAsync(User.Identity.Name);
+                User user = await _userHelper.GetUserAsync(User.Identity!.Name!);
                 if (user == null)
                 {
                     return NotFound();
                 }
                 //si no se agrega hidden for SpaceId en la vista AddBooking, el SpaceId se pierde y llega nulo a este punto.
-                Space space = await _context.Spaces.FindAsync(model.SpaceId);
+                Space? space = await _context.Spaces.FindAsync(model.SpaceId);
                 if (space == null)
                 {
                     return NotFound();
@@ -184,7 +186,7 @@ namespace CoSpace.Controllers
         {
             // Verificar si hay alguna reserva existente en el mismo espacio y horario
             bool isAvailable = !_context.Bookings.Any(b =>
-                b.Space.Id == spaceId &&
+                b.Space!.Id == spaceId &&
                 ((b.StartDate >= startDate && b.StartDate < endDate) || (b.EndDate > startDate && b.EndDate <= endDate)));
 
             return isAvailable;
@@ -220,24 +222,29 @@ namespace CoSpace.Controllers
                 {
                     _context.Update(space);
                     await _context.SaveChangesAsync();
+                    _flashMessage.Warning(string.Empty, "Espacio de trabajo actualizado exitosamente!.");
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (DbUpdateException dbUpdateException)
                 {
-                    if (!SpaceExists(space.Id))
+                    if (dbUpdateException.InnerException!.Message.Contains("duplicate"))
                     {
-                        return NotFound();
+                        _flashMessage.Danger(string.Empty, "Ya existe un espacio de trabajo con el mismo nombre.");
                     }
                     else
                     {
-                        throw;
+                        _flashMessage.Danger(string.Empty, dbUpdateException.InnerException.Message);
                     }
+                }
+                catch (Exception exception)
+                {
+                    _flashMessage.Danger(string.Empty, exception.Message);
                 }
                 return RedirectToAction(nameof(Index));
             }
             return View(space);
         }
 
-        // GET: Spaces/Delete/5
+        
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null || _context.Spaces == null)
@@ -251,32 +258,21 @@ namespace CoSpace.Controllers
             {
                 return NotFound();
             }
-
+            try
+            {
+                _context.Spaces.Remove(space);
+                await _context.SaveChangesAsync();
+                _flashMessage.Danger(string.Empty, "Espacio de trabajo eliminado exitosamente!.");
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception exception)
+            {
+                _flashMessage.Danger(string.Empty, exception.Message);
+            }
             return View(space);
         }
 
-        // POST: Spaces/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            if (_context.Spaces == null)
-            {
-                return Problem("Entity set 'DataContext.Spaces'  is null.");
-            }
-            var space = await _context.Spaces.FindAsync(id);
-            if (space != null)
-            {
-                _context.Spaces.Remove(space);
-            }
-
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
-        private bool SpaceExists(int id)
-        {
-            return (_context.Spaces?.Any(e => e.Id == id)).GetValueOrDefault();
-        }
+        
+               
     }
 }

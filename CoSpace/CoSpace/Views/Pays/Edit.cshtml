@@ -1,16 +1,18 @@
-﻿@model CoSpace.Data.Entities.Pay
+﻿@using CoSpace.Enums;
+@model CoSpace.Data.Entities.Pay
 
 @{
     ViewData["Title"] = "Edit";
+    Layout = null;
 }
 
-<h1>Edit</h1>
-
-<h4>Pay</h4>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+<flash dismissable="true" />
+<h4 style="font-family: 'Montserrat', sans-serif;">Pago</h4>
 <hr />
 <div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
+    <div class="col-md-10">
+        <form asp-action="Edit" style="font-family: 'Montserrat', sans-serif;">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
             <div class="form-group">
@@ -22,22 +24,29 @@
                 <label asp-for="Date" class="control-label"></label>
                 <input asp-for="Date" class="form-control" />
                 <span asp-validation-for="Date" class="text-danger"></span>
-            </div>
+            </div>           
             <div class="form-group">
                 <label asp-for="PaymentMethod" class="control-label"></label>
-                <select asp-for="PaymentMethod" class="form-control"></select>
-                <span asp-validation-for="PaymentMethod" class="text-danger"></span>
+                <div>
+                    <select asp-for="PaymentMethod" class="form-control">
+                        @foreach (var item in Enum.GetValues(typeof(PaymentMethod)))
+                        {
+                            <option value="@item">@item</option>
+                        }
+                    </select>
+                    <span asp-validation-for="PaymentMethod" class="text-danger"></span>
+                </div>
             </div>
+            <hr />
             <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
+                <input type="submit" value="Crear" class="btn btn-outline-primary" />
+                <a asp-action="Index" class="btn btn-outline-success">Cancelar</a>
             </div>
         </form>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}

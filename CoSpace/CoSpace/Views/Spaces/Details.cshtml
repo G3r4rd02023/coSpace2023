@@ -5,12 +5,13 @@
     Layout = null;
 }
 
-<h1>Details</h1>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
 
-<div>
-    <h4>Space</h4>
+<h4 style="font-family: 'Montserrat', sans-serif;">Espacio de trabajo</h4>
+
+<div>    
     <hr />
-    <dl class="row">
+    <dl class="row" style="font-family: 'Montserrat', sans-serif;">
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Name)
         </dt>
@@ -49,7 +50,6 @@
         </dd>
     </dl>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+<div>    
+    <a asp-action="Index" class="btn btn-outline-success">Cancelar</a>
 </div>

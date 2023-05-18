@@ -8,6 +8,7 @@ namespace CoSpace.Data.Entities
     {
         public int Id { get; set; }
 
+        [Display(Name = "Usuario")]
         public User? User { get; set; }
 
         public Space? Space { get; set; }
@@ -28,6 +29,7 @@ namespace CoSpace.Data.Entities
         [Required(ErrorMessage = "El campo {0} es obligatorio.")]
         public decimal TotalPrice { get; set; }
 
+        [Display(Name = "Estado")]
         public BookingState BookingState { get; set; }
 
         //public ICollection<Pay> Pays { get; set; } = null!;

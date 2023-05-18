@@ -10,6 +10,7 @@ namespace CoSpace.Data.Entities
 
         public Booking? Booking { get; set; }
 
+        [Display(Name = "Usuario")]
         public User? User { get; set; }
 
         [Column(TypeName = "decimal(18,2)")]
@@ -22,6 +23,8 @@ namespace CoSpace.Data.Entities
         [Display(Name = "Fecha")]
         [Required(ErrorMessage = "El campo {0} es obligatorio.")]
         public DateTime Date { get; set; }
+        
+        [Display(Name = "Metodo de pago")]
         public PaymentMethod PaymentMethod { get; set; }
     }
 }

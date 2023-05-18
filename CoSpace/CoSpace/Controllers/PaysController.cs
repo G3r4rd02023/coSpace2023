@@ -2,27 +2,30 @@
 using CoSpace.Data.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Vereyon.Web;
 
 namespace CoSpace.Controllers
 {
     public class PaysController : Controller
     {
         private readonly DataContext _context;
+        private readonly IFlashMessage _flashMessage;
 
-        public PaysController(DataContext context)
+        public PaysController(DataContext context, IFlashMessage flashMessage)
         {
             _context = context;
+            _flashMessage = flashMessage;
         }
 
-        // GET: Pays
+
         public async Task<IActionResult> Index()
         {
             return _context.Pays != null ?
-                        View(await _context.Pays.ToListAsync()) :
+                        View(await _context.Pays.Include(p => p.User).ToListAsync()) :
                         Problem("Entity set 'DataContext.Pays'  is null.");
         }
 
-        // GET: Pays/Details/5
+
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null || _context.Pays == null)
@@ -31,6 +34,7 @@ namespace CoSpace.Controllers
             }
 
             var pay = await _context.Pays
+                .Include(p => p.User)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (pay == null)
             {
@@ -40,29 +44,8 @@ namespace CoSpace.Controllers
             return View(pay);
         }
 
-        // GET: Pays/Create
-        public IActionResult Create()
-        {
-            return View();
-        }
 
-        // POST: Pays/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Amount,Date,PaymentMethod")] Pay pay)
-        {
-            if (ModelState.IsValid)
-            {
-                _context.Add(pay);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(pay);
-        }
 
-        // GET: Pays/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null || _context.Pays == null)
@@ -78,12 +61,10 @@ namespace CoSpace.Controllers
             return View(pay);
         }
 
-        // POST: Pays/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Amount,Date,PaymentMethod")] Pay pay)
+        public async Task<IActionResult> Edit(int id, Pay pay)
         {
             if (id != pay.Id)
             {
@@ -97,23 +78,16 @@ namespace CoSpace.Controllers
                     _context.Update(pay);
                     await _context.SaveChangesAsync();
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (Exception exception)
                 {
-                    if (!PayExists(pay.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    _flashMessage.Danger(string.Empty, exception.Message);
                 }
                 return RedirectToAction(nameof(Index));
             }
             return View(pay);
         }
 
-        // GET: Pays/Delete/5
+
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null || _context.Pays == null)
@@ -127,32 +101,21 @@ namespace CoSpace.Controllers
             {
                 return NotFound();
             }
+            try
+            {
+                _context.Pays.Remove(pay);
+                await _context.SaveChangesAsync();
+                _flashMessage.Danger(string.Empty, "Registro eliminado exitosamente!.");
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception exception)
+            {
+                _flashMessage.Danger(string.Empty, exception.Message);
+            }
 
             return View(pay);
         }
 
-        // POST: Pays/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            if (_context.Pays == null)
-            {
-                return Problem("Entity set 'DataContext.Pays'  is null.");
-            }
-            var pay = await _context.Pays.FindAsync(id);
-            if (pay != null)
-            {
-                _context.Pays.Remove(pay);
-            }
 
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
-        private bool PayExists(int id)
-        {
-            return (_context.Pays?.Any(e => e.Id == id)).GetValueOrDefault();
-        }
     }
 }

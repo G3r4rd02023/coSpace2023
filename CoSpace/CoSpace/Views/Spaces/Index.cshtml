@@ -4,19 +4,24 @@
     ViewData["Title"] = "Index";
 }
 
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
 
+<flash dismissable="true" />
 
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css" />
 
+
+<h4 style="font-family: 'Montserrat', sans-serif;">Espacios de trabajo</h4>
+<hr />
 <p>    
     <a onclick="showInPopup('@Url.Action("Create", "Spaces", new { id = 0 }, Context.Request.Scheme)' ,
-    'Nuevo Espacio')" class="btn btn-sm btn-primary text-white"><i class="fa fa-plus-circle"></i> Espacio</a>
+    'Nuevo Espacio')" class="btn btn-sm btn-primary text-white"><i class="fa fa-plus-circle"></i></a>
 </p>
 <div class="row">
     <div class="col-md-12">
-        <div class="panel panel-default">
+        <div class="panel panel-default" style="font-family: 'Montserrat', sans-serif;">
             <div class="panel-heading">
-                <h3 class="panel-title">Espacios Disponibles</h3>
+                <h5 class="panel-title">Espacios Disponibles</h5>
             </div>
             <div class="panel-body">
                 <table class="table table-hover table-responsive table-striped" id="MyTable">
@@ -65,11 +70,11 @@
                                 <td>
                                     
                                     <a onclick="showInPopup('@Url.Action("AddBooking", "Spaces", new { id = item.Id }, Context.Request.Scheme)' ,
-                    'Reservar')" class="btn btn-outline-secondary"><i class="fa fa-pencil-alt"></i> </a>
+                    'Reservar')" class="btn btn-outline-secondary"><i class="fa-solid fa-calendar"></i> </a>
                                     <a onclick="showInPopup('@Url.Action("Edit", "Spaces", new { id = item.Id }, Context.Request.Scheme)' ,
                     'Editar')" class="btn btn-outline-warning"><i class="fa fa-pencil-alt"></i> </a>
                                     <a onclick="showInPopup('@Url.Action("Details", "Spaces", new { id = item.Id }, Context.Request.Scheme)' ,
-                    'Detalles')" class="btn btn-outline-info"><i class="fa fa-pencil-alt"></i> </a>
+                    'Detalles')" class="btn btn-outline-info"><i class="fa-solid fa-list"></i></a>
                                     <button data-id="@item.Id" class="btn btn-outline-danger deleteItem" data-bs-toggle="modal"
                                             data-bs-target="#deleteDialog">
                                         <i class="fa fa-trash"></i>

@@ -5,6 +5,7 @@ using CoSpace.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Vereyon.Web;
 
 namespace CoSpace.Controllers
 {
@@ -12,15 +13,16 @@ namespace CoSpace.Controllers
     {
         private readonly DataContext _context;
         private readonly IUserHelper _userHelper;
+        private readonly IFlashMessage _flashMessage;
 
-        public BookingsController(DataContext context, IUserHelper userHelper)
+        public BookingsController(DataContext context, IUserHelper userHelper,IFlashMessage flashMessage)
         {
             _context = context;
             _userHelper = userHelper;
+            _flashMessage = flashMessage;
         }
 
-        
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
             List<Booking> availableBookings = GetAvailableBookings();
 
@@ -34,6 +36,7 @@ namespace CoSpace.Controllers
             List<Booking> availableBookings;
 
             availableBookings = _context.Bookings
+                .Include(b => b.User)
                 .Where(b => b.EndDate > currentDate)
                 .ToList();
 
@@ -48,6 +51,7 @@ namespace CoSpace.Controllers
             }
 
             var booking = await _context.Bookings
+                .Include(b=>b.User)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (booking == null)
             {
@@ -56,28 +60,7 @@ namespace CoSpace.Controllers
 
             return View(booking);
         }
-
-
-        public IActionResult Create()
-        {
-            return View();
-        }
-
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Booking booking)
-        {
-            if (ModelState.IsValid)
-            {
-                booking.BookingState = Enums.BookingState.Confirmada;
-                _context.Add(booking);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(booking);
-        }
-
+        
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Confirm(int? id)
         {
@@ -86,7 +69,7 @@ namespace CoSpace.Controllers
                 return NotFound();
             }
 
-            Booking booking = await _context.Bookings.FindAsync(id);
+            Booking? booking = await _context.Bookings.FindAsync(id);
             if (booking == null)
             {
                 return NotFound();
@@ -94,17 +77,17 @@ namespace CoSpace.Controllers
 
             if (booking.BookingState != Enums.BookingState.Pendiente)
             {
-                Problem("Solo se pueden confirmar reservas que estén en estado 'pendiente'.");
+                _flashMessage.Danger("Solo se pueden confirmar reservas que estén en estado 'pendiente'.");
             }
             else
             {
                 booking.BookingState = Enums.BookingState.Confirmada;
                 _context.Bookings.Update(booking);
                 await _context.SaveChangesAsync();
-                Problem("El estado del pedido ha sido cambiado a 'confirmada'.");
+                _flashMessage.Confirmation("El estado de la reserva ha sido cambiado a 'confirmada'.");
             }
 
-            return RedirectToAction(nameof(Details), new { booking.Id });
+            return RedirectToAction(nameof(Index));
         }
 
         [Authorize(Roles = "Admin")]
@@ -115,7 +98,7 @@ namespace CoSpace.Controllers
                 return NotFound();
             }
 
-            Booking booking = await _context.Bookings.FindAsync(id);
+            Booking? booking = await _context.Bookings.FindAsync(id);
             if (booking == null)
             {
                 return NotFound();
@@ -123,17 +106,17 @@ namespace CoSpace.Controllers
 
             if (booking.BookingState == Enums.BookingState.Cancelada)
             {
-                Problem("No se puede cancelar una reserva que esté en estado 'cancelada'.");
+                _flashMessage.Danger("No se puede cancelar una reserva en estado 'cancelada'.");
             }
             else
             {
                 booking.BookingState = Enums.BookingState.Cancelada;
                 _context.Bookings.Update(booking);
                 await _context.SaveChangesAsync();
-                Problem("El estado del pedido ha sido cambiado a 'cancelado'.");
+                _flashMessage.Confirmation("El estado de la reserva ha sido cambiado a 'cancelada'.");
             }
 
-            return RedirectToAction(nameof(Details), new { booking.Id });
+            return RedirectToAction(nameof(Index));
         }
 
         public async Task<IActionResult> Edit(int? id)
@@ -167,17 +150,10 @@ namespace CoSpace.Controllers
                 {
                     _context.Update(booking);
                     await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
+                }               
+                catch (Exception exception)
                 {
-                    if (!BookingExists(booking.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    _flashMessage.Danger(string.Empty, exception.Message);
                 }
                 return RedirectToAction(nameof(Index));
             }
@@ -186,13 +162,13 @@ namespace CoSpace.Controllers
 
         public async Task<IActionResult> Pay(int id)
         {
-            User user = await _userHelper.GetUserAsync(User.Identity.Name);
+            User user = await _userHelper.GetUserAsync(User.Identity!.Name!);
             if (user == null)
             {
                 return NotFound();
             }
 
-            Booking booking = await _context.Bookings.FindAsync(id);
+            Booking? booking = await _context.Bookings.FindAsync(id);
 
             PayViewModel model = new()
             {
@@ -201,7 +177,7 @@ namespace CoSpace.Controllers
                 User = user,
                 PaymentMethod = Enums.PaymentMethod.Efectivo,
                 Date = DateTime.Now,
-                Amount = booking.TotalPrice
+                Amount = booking!.TotalPrice
             };
 
             return View(model);
@@ -213,13 +189,13 @@ namespace CoSpace.Controllers
         {
             if (ModelState.IsValid)
             {
-                User user = await _userHelper.GetUserAsync(User.Identity.Name);
+                User user = await _userHelper.GetUserAsync(User.Identity!.Name!);
                 if (user == null)
                 {
                     return NotFound();
                 }
                 //si no se agrega hidden for SpaceId en la vista AddBooking, el SpaceId se pierde y llega nulo a este punto.
-                Booking booking = await _context.Bookings.FindAsync(model.BookingId);
+                Booking? booking = await _context.Bookings.FindAsync(model.BookingId);
                 if (booking == null)
                 {
                     return NotFound();
@@ -259,32 +235,19 @@ namespace CoSpace.Controllers
             {
                 return NotFound();
             }
-
-            return View(booking);
-        }
-
-
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            if (_context.Bookings == null)
-            {
-                return Problem("Entity set 'DataContext.Bookings'  is null.");
-            }
-            var booking = await _context.Bookings.FindAsync(id);
-            if (booking != null)
+            try
             {
                 _context.Bookings.Remove(booking);
+                await _context.SaveChangesAsync();
+                _flashMessage.Danger(string.Empty, "Registro eliminado exitosamente!.");
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception exception)
+            {
+                _flashMessage.Danger(string.Empty, exception.Message);
             }
 
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
-        private bool BookingExists(int id)
-        {
-            return (_context.Bookings?.Any(e => e.Id == id)).GetValueOrDefault();
-        }
+            return View(booking);
+        }        
     }
 }
