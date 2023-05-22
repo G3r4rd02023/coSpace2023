@@ -140,8 +140,9 @@ namespace CoSpace.Controllers
 
             if (!isSpaceAvailable)
             {
-                _flashMessage.Danger("El espacio seleccionado no está disponible en el horario especificado.");                
-                return View(model);
+                _flashMessage.Danger("El espacio seleccionado no está disponible en el horario especificado.");
+				return RedirectToAction(nameof(Index));
+				//return View(model);
             }
 
             if (ModelState.IsValid)
@@ -172,6 +173,7 @@ namespace CoSpace.Controllers
                     
                     _context.Add(booking);
                     await _context.SaveChangesAsync();
+                    _flashMessage.Confirmation("Has reservado exitosamente,da click en la seccion de reservas para ver mas informacion. ");
                 }
                 catch (Exception exception)
                 {
