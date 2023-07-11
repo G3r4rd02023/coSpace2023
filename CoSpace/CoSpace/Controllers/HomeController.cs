@@ -49,10 +49,9 @@ namespace CoSpace.Controllers
                 var evento = new
                 {
                     id = reserva.Id,
-                    title = reserva.BookingState.ToString(),
+                    title = reserva.Space!.Name,
                     start = reserva.StartDate.ToString("yyyy-MM-ddTHH:mm:ss"),
-                    end = reserva.EndDate.ToString("yyyy-MM-ddTHH:mm:ss"),
-                    sala = reserva.Space!.Name
+                    end = reserva.EndDate.ToString("yyyy-MM-ddTHH:mm:ss")                   
                 };
 
                 eventos.Add(evento);
