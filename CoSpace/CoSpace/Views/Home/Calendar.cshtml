@@ -1,0 +1,25 @@
+﻿
+@{
+    ViewData["Title"] = "Calendar";
+}
+
+<h2>Calendario</h2>
+
+<div id="calendar"></div>
+
+@section scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var calendarEl = document.getElementById('calendar');
+
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                // Configuración y opciones de FullCalendar
+                // Puedes personalizar el calendario según tus necesidades
+                events: @Html.Raw(ViewBag.Eventos) // Cargar los eventos desde ViewBag.Eventos
+            });
+
+            calendar.render();
+        });
+    </script>
+}
+
